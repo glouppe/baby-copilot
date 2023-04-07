@@ -3,7 +3,6 @@ import numpy as np
 import openai
 import re 
 import subprocess
-import sys
 
 import pygments
 from pygments.lexers import PythonLexer
@@ -24,13 +23,10 @@ def call_openai_api(prompt):
 
 def parse_code(code):
     code = code.strip()
-    if code[:3] == "```":
-        code = code[3:]
-    if code[-3:] == "```":
-        code = code[:-3]
-    if code[:7] == "python\n":
-        code = code[7:]
-    return code.strip()
+    match = re.search(r"```(python)?\n(.*)```", code, re.DOTALL)
+    if match:
+        code = match.group(2).strip()
+    return code
 
 def run_code(code, ask=True):
     if (input("Run code? [y/n] ") if ask else "y") == "y":
@@ -56,7 +52,7 @@ def str_tasks(tasks):
 # LLM functions
 
 def init_tasks(code, output):
-    prompt = f"You are a rockstar Python programmer tasked to improve a piece of Python code written by a novice. Your goal is to make the code correct, short and efficient while aiming for beautiful Pythonic minimalism. Do not add boilerplate code.\n\nCurrent code:\n```python\n{code}```\n\n"
+    prompt = f"You are a rockstar Python programmer tasked to improve a piece of Python code written by a novice. Your goal is to make the code correct, short and efficient. Do not add boilerplate code.\n\nCurrent code:\n```python\n{code}```\n\n"
     if output:
         prompt += f"Current output:\n```{output}```\n\n"
     prompt += f"Provide an initial list of tasks to improve the code. Return the list as a bullet list, like:\n#. First task\n#. Second task."
@@ -64,16 +60,16 @@ def init_tasks(code, output):
     return parse_tasks(response)
 
 def execute_task(code, output, completed_tasks, task):
-    prompt = f"You are a rockstar Python programmer who performs one task to improve a piece of Python code written by a novice. Your goal is to make the code correct, short and efficient while aiming for beautiful Pythonic minimalism. Do not add boilerplate code.\n\nCurrent code:\n```python\n{code}```\n\n"
+    prompt = f"You are a rockstar Python programmer who performs one task to improve a piece of Python code written by a novice. Your goal is to make the code correct, short and efficient. Do not add boilerplate code.\n\nCurrent code:\n```python\n{code}```\n\n"
     if output:
         prompt += f"Current output:\n```{output}```\n\n"
     prompt += f"Take into account these previously completed tasks:\n{str_tasks(completed_tasks)}\n\n"
-    prompt += f"Your next task: {task}\n\nReturn the code WITHOUT making other changes than those necessary for the task. Return code ONLY."
+    prompt += f"Your next task: {task}\n\nReturn the code WITHOUT making ANY other changes than those necessary for the current task. Keep tests if any. Return code ONLY. No verbose, no chat, no comments, no explanations."
     code = call_openai_api(prompt)
     return parse_code(code)
 
 def create_tasks(code, output, completed_tasks, uncompleted_tasks, task):
-    prompt = f"You are a rockstar Python programmer tasked to improve a piece of Python code written by a novice. Your goal is to make the code correct, short and efficient while aiming for beautiful Pythonic minimalism. Do not add boilerplate code.\n\nCurrent code:\n```python\n{code}```\n\n"
+    prompt = f"You are a rockstar Python programmer tasked to improve a piece of Python code written by a novice. Your goal is to make the code correct, short and efficient. Do not add boilerplate code.\n\nCurrent code:\n```python\n{code}```\n\n"
     if output:
         prompt += f"Current output:\n```{output}```\n\n"
     prompt += f"Take into account these previously completed tasks:\n{str_tasks(completed_tasks)}\n\n"
@@ -83,7 +79,7 @@ def create_tasks(code, output, completed_tasks, uncompleted_tasks, task):
     return parse_tasks(response)
 
 def prioritize_tasks(tasks, code, output, max_tasks=10):
-    prompt = f"You are a task prioritization expert. You are tasked with cleaning the formatting of and reprioritizing the following list of tasks:\n{str_tasks(tasks)}\n\nIf needed, remove tasks that are redundant or no longer necessary. Prioritize bug fixes first. Keep {max_tasks} tasks at most. The ultimate goal is to make a piece of Python code correct, short and efficient while aiming for beautiful Pythonic minimalism.\n\nCurrent code:\n```python\n{code}```\n\n"
+    prompt = f"You are a task prioritization expert. You are tasked with cleaning the formatting of and reprioritizing the following list of tasks:\n{str_tasks(tasks)}\n\nPrioritize major bug fixes first. If needed, remove tasks that are redundant or no longer necessary. Keep {max_tasks} tasks at most. The ultimate goal is to make a piece of Python code correct, short and efficient.\n\nCurrent code:\n```python\n{code}```\n\n"
     if output:
         prompt += f"Current output:\n```{output}```\n\n"
     prompt += f"Return the list as a bullet list, like:\n#. First task\n#. Second task."
