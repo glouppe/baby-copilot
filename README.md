@@ -5,6 +5,13 @@ Baby-Copilot :airplane: :baby: is an AI system that can autonomously fix and imp
 Disclaimer: This project is meant as a proof-of-concept to showcase how to programmaticaly interface with language model instances and compose programs partly expressed in natural language. Expect bugs and errors :bug:, those LLMs are capricious.
 
 
+## Demo
+
+[![Baby-Copilot](https://img.youtube.com/vi/VahOoPhGP7w/0.jpg)](https://www.youtube.com/watch?v=VahOoPhGP7w)
+
+Check [https://www.youtube.com/watch?v=VahOoPhGP7w](https://www.youtube.com/watch?v=VahOoPhGP7w) for a live demo.
+
+
 ## Usage
     
 Manual mode:
